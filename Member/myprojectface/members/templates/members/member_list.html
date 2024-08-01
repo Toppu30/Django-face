@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Member List</title>
+</head>
+<body>
+    <h2>Member List</h2>
+    <ul>
+        {% for member in members %}
+            <li>{{ member.name }} - {{ member.phone_number }}</li>
+        {% endfor %}
+    </ul>
+    <a href="{% url 'add_member' %}">Add Member</a>
+    <a href="{% url 'scan_face' %}">Scan Face</a>
+</body>
+</html>

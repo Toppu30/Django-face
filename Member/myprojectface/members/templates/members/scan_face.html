@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Scan Face</title>
+    <style>
+        #camera {
+            width: 100%;
+            max-width: 400px;
+        }
+        #photo {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h2>Scan Face</h2>
+    <form method="post">
+        {% csrf_token %}
+        <div>
+            <video id="camera" autoplay></video>
+            <canvas id="photo"></canvas>
+        </div>
+        <button type="button" onclick="takePicture()">Take Picture</button>
+        <input type="hidden" name="photo_data" id="photo_data">
+        <button type="submit">Submit</button>
+    </form>
+
+    {% if member %}
+        <h2>Scan Result</h2>
+        <p>Name: {{ member.name }}</p>
+        <p>Phone Number: {{ member.phone_number }}</p>
+        <p>Details: {{ member.details }}</p>
+        <p>Similarity: {{ similarity|floatformat:2 }}%</p>
+        <img src="{{ member.face_image.url }}" alt="{{ member.name }}">
+    {% elif error %}
+        <h2>Scan Result</h2>
+        <p>{{ error }}</p>
+    {% endif %}
+
+    <script>
+        const video = document.getElementById('camera');
+        const canvas = document.getElementById('photo');
+        const photo_data = document.getElementById('photo_data');
+
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            navigator.mediaDevices.getUserMedia({ video: true }).then(function(stream) {
+                video.srcObject = stream;
+                video.play();
+            });
+        }
+
+        function takePicture() {
+            const context = canvas.getContext('2d');
+            const width = video.videoWidth;
+            const height = video.videoHeight;
+            canvas.width = width;
+            canvas.height = height;
+            context.drawImage(video, 0, 0, width, height);
+            const data = canvas.toDataURL('image/png');
+            photo_data.value = data;
+            canvas.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
