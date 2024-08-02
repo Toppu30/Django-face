@@ -36,7 +36,8 @@
         <h2>Scan Result</h2>
         <p>{{ error }}</p>
     {% endif %}
-
+    <a href="{% url 'add_member' %}">Add Member</a>
+    <a href="{% url 'member_list' %}">Member List</a>
     <script>
         const video = document.getElementById('camera');
         const canvas = document.getElementById('photo');
