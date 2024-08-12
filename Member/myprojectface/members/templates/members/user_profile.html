@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>User Profile</title>
+</head>
+<body>
+    <h2>User Profile</h2>
+    <p>Username: {{ user.username }}</p>
+    <p>Name: {{ user.name }}</p>
+    <p>Phone Number: {{ user.phone_number }}</p>
+    <p>Details: {{ user.details }}</p>
+    <p>Role: {{ user.role }}</p>  <!-- เปลี่ยนเป็น Role -->
+    <p>Signup Date: {{ user.signup_date }}</p>
+    <p>Last Login Date: {{ user.last_login_date }}</p>
+    <p>Login Count: {{ user.login_count }}</p>
+    {% if user.user_image %}
+        <img src="{{ user.user_image.url }}" alt="User Image" width="200">
+    {% endif %}
+</body>
+</html>

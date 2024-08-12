@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Edit Member</title>
+    <style>
+        #camera {
+            width: 100%;
+            max-width: 400px;
+        }
+        #photo, #current-photo {
+            display: none;
+        }
+        #current-photo {
+            display: block;
+            margin-top: 10px;
+        }
+        #message {
+            display: none;  /* ซ่อนข้อความข้อผิดพลาดตั้งแต่แรก */
+            color: red;
+            margin-top: 10px;
+        }
+        #cancel-photo {
+            display: none; /* ซ่อนปุ่มยกเลิกการถ่ายตั้งแต่แรก */
+        }
+    </style>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <h2>Edit Member</h2>
+    <form method="post" enctype="multipart/form-data" id="member-form">
+        {% csrf_token %}
+        {{ form.as_p }}
+        {% if member.face_image %}
+            <img id="current-photo" src="{{ member.face_image.url }}" alt="Current Photo" width="200">
+        {% endif %}
+        <div>
+            <video id="camera" autoplay style="display:none;"></video>  <!-- ซ่อนกล้องตั้งแต่แรก -->
+            <canvas id="photo" style="display:none;"></canvas>  <!-- ซ่อน Canvas ตั้งแต่แรก -->
+        </div>
+        <button type="button" id="retake-photo" onclick="retakePicture()">ถ่ายใหม่</button>  <!-- ปุ่มสำหรับเปิดกล้อง -->
+        <button type="button" id="cancel-photo" onclick="cancelRetake()">ยกเลิกการถ่าย</button>  <!-- ปุ่มยกเลิกการถ่าย -->
+        <input type="hidden" name="photo_data" id="photo_data">
+        <button type="submit" id="submit-btn">Submit</button>  <!-- ปุ่ม Submit แสดงตั้งแต่แรก -->
+    </form>
+
+    <p id="message">{{ error }}</p>  <!-- ข้อความข้อผิดพลาดที่ซ่อนไว้ตั้งแต่แรก -->
+
+    <script>
+        const video = document.getElementById('camera');
+        const canvas = document.getElementById('photo');
+        const photo_data = document.getElementById('photo_data');
+        const message = document.getElementById('message');
+        const submitBtn = document.getElementById('submit-btn');
+        const retakePhotoBtn = document.getElementById('retake-photo');
+        const cancelPhotoBtn = document.getElementById('cancel-photo');
+        const currentPhoto = document.getElementById('current-photo');
+
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            navigator.mediaDevices.getUserMedia({ video: true }).then(function(stream) {
+                video.srcObject = stream;
+            });
+        }
+
+        function retakePicture() {
+            video.style.display = 'block';  // แสดงกล้อง
+            canvas.style.display = 'none';  // ซ่อนภาพที่ถ่ายไว้ก่อนหน้า
+            currentPhoto.style.display = 'none';  // ซ่อนรูปภาพเดิม
+            cancelPhotoBtn.style.display = 'inline-block';  // แสดงปุ่มยกเลิกการถ่าย
+            message.style.display = 'block';  // แสดงข้อความข้อผิดพลาดพร้อมกับกล้อง
+            submitBtn.style.display = 'none';  // ซ่อนปุ่ม Submit เมื่อกำลังถ่ายรูปใหม่
+            retakePhotoBtn.textContent = "ถ่ายรูป";  // เปลี่ยนข้อความปุ่ม
+            retakePhotoBtn.onclick = takePicture;  // เปลี่ยนฟังก์ชันปุ่มไปที่การถ่ายรูป
+        }
+
+        function cancelRetake() {
+            video.style.display = 'none';  // ซ่อนกล้อง
+            canvas.style.display = 'none';  // ซ่อน Canvas ที่ใช้แสดงภาพถ่ายใหม่
+            currentPhoto.style.display = 'block';  // แสดงรูปภาพเดิม
+            cancelPhotoBtn.style.display = 'none';  // ซ่อนปุ่มยกเลิกการถ่าย
+            retakePhotoBtn.textContent = "ถ่ายใหม่";  // เปลี่ยนข้อความปุ่มกลับเป็น "ถ่ายใหม่"
+            retakePhotoBtn.onclick = retakePicture;  // เปลี่ยนฟังก์ชันปุ่มกลับไปที่การเริ่มถ่ายใหม่
+            message.style.display = 'none';  // ซ่อนข้อความข้อผิดพลาด
+            submitBtn.style.display = 'block';  // แสดงปุ่ม Submit กลับมา
+        }
+
+        function takePicture() {
+            const context = canvas.getContext('2d');
+            const width = video.videoWidth;
+            const height = video.videoHeight;
+            canvas.width = width;
+            canvas.height = height;
+            context.drawImage(video, 0, 0, width, height);
+            const data = canvas.toDataURL('image/png');
+            photo_data.value = data;
+            canvas.style.display = 'block';
+            video.style.display = 'none';
+            cancelPhotoBtn.style.display = 'inline-block';  // แสดงปุ่มยกเลิกการถ่าย
+            retakePhotoBtn.textContent = "ถ่ายใหม่";  // เปลี่ยนข้อความปุ่มเป็น "ถ่ายใหม่"
+            retakePhotoBtn.onclick = retakePicture;  // เปลี่ยนฟังก์ชันปุ่มไปที่การถ่ายใหม่
+
+            // ส่งข้อมูลรูปภาพผ่าน AJAX เพื่อทำการตรวจสอบใบหน้า
+            $.ajax({
+                type: 'POST',
+                url: '{% url "check_faces" %}',
+                data: {
+                    'photo_data': data,
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'
+                },
+                success: function(response) {
+                    if (response.error) {
+                        message.style.display = 'block';  // แสดงข้อความข้อผิดพลาด
+                        message.textContent = response.error;
+                        submitBtn.style.display = 'none';  // ซ่อนปุ่ม Submit หากมีข้อผิดพลาด
+                    } else {
+                        message.style.display = 'none';  // ซ่อนข้อความข้อผิดพลาดถ้าไม่มีข้อผิดพลาด
+                        submitBtn.style.display = 'block';  // แสดงปุ่ม Submit ถ้าไม่มีข้อผิดพลาด
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>

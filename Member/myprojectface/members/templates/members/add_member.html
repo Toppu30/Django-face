@@ -11,10 +11,11 @@
             display: none;
         }
     </style>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
     <h2>Add Member</h2>
-    <form method="post" enctype="multipart/form-data">
+    <form method="post" enctype="multipart/form-data" id="member-form">
         {% csrf_token %}
         {{ form.as_p }}
         <div>
@@ -23,14 +24,18 @@
         </div>
         <button type="button" onclick="takePicture()">Take Picture</button>
         <input type="hidden" name="photo_data" id="photo_data">
-        <button type="submit">Submit</button>
+        <button type="submit" id="submit-btn" style="display:none;">Submit</button>  <!-- ซ่อนปุ่ม Submit -->
     </form>
+
+    <p id="message" style="color: red;"></p>
+
     <script>
         const video = document.getElementById('camera');
         const canvas = document.getElementById('photo');
         const photo_data = document.getElementById('photo_data');
+        const message = document.getElementById('message');
+        const submitBtn = document.getElementById('submit-btn');
 
-        // Get access to the camera
         if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
             navigator.mediaDevices.getUserMedia({ video: true }).then(function(stream) {
                 video.srcObject = stream;
@@ -48,6 +53,25 @@
             const data = canvas.toDataURL('image/png');
             photo_data.value = data;
             canvas.style.display = 'block';
+
+            // ส่งข้อมูลรูปภาพผ่าน AJAX
+            $.ajax({
+                type: 'POST',
+                url: '{% url "check_faces" %}',
+                data: {
+                    'photo_data': data,
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'
+                },
+                success: function(response) {
+                    if (response.error) {
+                        message.textContent = response.error;
+                        submitBtn.style.display = 'none';  // ซ่อนปุ่ม submit ถ้ามีข้อผิดพลาด
+                    } else {
+                        message.textContent = response.success;
+                        submitBtn.style.display = 'block';  // แสดงปุ่ม submit ถ้าไม่มีข้อผิดพลาด
+                    }
+                }
+            });
         }
     </script>
 </body>
