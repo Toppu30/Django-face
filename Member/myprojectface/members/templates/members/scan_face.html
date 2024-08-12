@@ -39,6 +39,10 @@
     {% endif %}
     <a href="{% url 'add_member' %}">Add Member</a>
     <a href="{% url 'member_list' %}">Member List</a>
+    <form method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button type="submit">Logout</button>
+    </form>
     <script>
         const video = document.getElementById('camera');
         const canvas = document.getElementById('photo');

@@ -50,5 +50,9 @@
     <a href="{% url 'add_member' %}">Add Member</a>
     <a href="{% url 'scan_face' %}">Scan Face</a>
     <a href="{% url 'dashboard' %}">Dashboard</a>
+    <form method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button type="submit">Logout</button>
+    </form>
 </body>
 </html>

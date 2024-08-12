@@ -124,10 +124,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-# LOGIN_URL = '/members/login/'
-# LOGIN_REDIRECT_URL = '/members/user_profile/'
-# LOGOUT_REDIRECT_URL = '/members/login/'
-# LOGIN_URL = 'login'
-# LOGIN_REDIRECT_URL = 'user_profile'
-# LOGOUT_REDIRECT_URL = 'login'
-# AUTH_USER_MODEL = 'members.UserProfile'
+LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = 'home'
+LOGOUT_REDIRECT_URL = 'login'
+AUTH_USER_MODEL = 'members.CustomUser'

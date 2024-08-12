@@ -3,8 +3,9 @@
 import base64
 import face_recognition
 import numpy as np
+from django.contrib.auth import views as auth_views
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import User
 from django.core.files.base import ContentFile
 from django.shortcuts import render, redirect, get_object_or_404
@@ -14,6 +15,48 @@ from django.http import JsonResponse
 import datetime
 from .models import *
 from .forms import *
+
+def register(request):
+    if request.method == 'POST':
+        form = CustomUserCreationForm(request.POST, request.FILES)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            return redirect('home')
+    else:
+        form = CustomUserCreationForm()
+    return render(request, 'members/register.html', {'form': form})
+
+@login_required
+def home(request):
+    return render(request, 'members/scan_face.html', {'user': request.user})
+
+class CustomLoginView(auth_views.LoginView):
+    template_name = 'members/login.html'
+
+def is_manager(user):
+    return user.role == 'manager'
+
+@login_required
+@user_passes_test(is_manager)
+def user_list(request):
+    managers = CustomUser.objects.filter(role='manager')
+    cashiers = CustomUser.objects.filter(role='cashier')
+    users = list(managers) + list(cashiers)
+    return render(request, 'members/user_list.html', {'users': users})
+
+@login_required
+@user_passes_test(is_manager)
+def user_edit(request, user_id):
+    user = get_object_or_404(CustomUser, id=user_id)
+    if request.method == 'POST':
+        form = UserUpdateForm(request.POST, request.FILES, instance=user)
+        if form.is_valid():
+            form.save()
+            return redirect('user_list')
+    else:
+        form = UserUpdateForm(instance=user)
+    return render(request, 'members/edit_user.html', {'form': form, 'user': user})
 
 def add_member(request):
     error = None  # กำหนดตัวแปร error เป็น None
@@ -64,6 +107,7 @@ def check_faces(request):
                 return JsonResponse({'success': 'พบใบหน้าเพียงใบหน้าเดียวในภาพ'})
     return JsonResponse({'error': 'คำขอไม่ถูกต้อง'})
 
+@login_required
 def member_list(request):
     members = Member.objects.all()
     return render(request, 'members/member_list.html', {'members': members})
