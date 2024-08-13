@@ -16,13 +16,17 @@ import datetime
 from .models import *
 from .forms import *
 
+def is_manager(user):
+    return user.role == 'manager'
+
+@login_required
+@user_passes_test(is_manager)
 def register(request):
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST, request.FILES)
         if form.is_valid():
             user = form.save()
-            login(request, user)
-            return redirect('home')
+            return redirect('user_list')
     else:
         form = CustomUserCreationForm()
     return render(request, 'members/register.html', {'form': form})
@@ -33,9 +37,6 @@ def home(request):
 
 class CustomLoginView(auth_views.LoginView):
     template_name = 'members/login.html'
-
-def is_manager(user):
-    return user.role == 'manager'
 
 @login_required
 @user_passes_test(is_manager)
@@ -58,6 +59,16 @@ def user_edit(request, user_id):
         form = UserUpdateForm(instance=user)
     return render(request, 'members/edit_user.html', {'form': form, 'user': user})
 
+@login_required
+@user_passes_test(is_manager)
+def user_delete(request, user_id):
+    user = get_object_or_404(CustomUser, id=user_id)
+    if request.method == 'POST':
+        user.delete()
+        return redirect('user_list')
+    return redirect('user_list')
+
+@login_required
 def add_member(request):
     error = None  # กำหนดตัวแปร error เป็น None
     if request.method == 'POST':  # ตรวจสอบว่าคำขอเป็นแบบ POST หรือไม่
@@ -87,6 +98,7 @@ def add_member(request):
         form = MemberForm()  # สร้างฟอร์มเปล่า
     return render(request, 'members/add_member.html', {'form': form, 'error': error})  # แสดงฟอร์มเพื่อเพิ่มสมาชิกพร้อมข้อความข้อผิดพลาด (ถ้ามี)
 
+@login_required
 def check_faces(request):
     if request.method == 'POST':  # ตรวจสอบว่าคำขอเป็นแบบ POST หรือไม่
         photo_data = request.POST.get('photo_data')  # รับข้อมูลรูปภาพจากคำขอ POST
@@ -112,6 +124,7 @@ def member_list(request):
     members = Member.objects.all()
     return render(request, 'members/member_list.html', {'members': members})
 
+@login_required
 def edit_member(request, member_id):
     member = get_object_or_404(Member, id=member_id)
     old_image_path = member.face_image.path if member.face_image else None  # เก็บ path ของรูปภาพเก่า
@@ -152,6 +165,7 @@ def edit_member(request, member_id):
 
     return render(request, 'members/edit_member.html', {'form': form, 'member': member, 'error': error})
 
+@login_required
 def scan_face(request):
     member = None
     error = None
@@ -189,7 +203,7 @@ def scan_face(request):
     
     return render(request, 'members/scan_face.html', {'member': member, 'error': error})
 
-
+@login_required
 def delete_member(request, member_id):
     member = get_object_or_404(Member, id=member_id)
     if request.method == 'POST':
@@ -197,6 +211,8 @@ def delete_member(request, member_id):
         return redirect('member_list')
     return redirect('member_list')
 
+@login_required
+@user_passes_test(is_manager)
 def dashboard(request):
     today = timezone.localtime().date()  # ใช้ localtime เพื่อให้แน่ใจว่าใช้ Timezone ที่ถูกต้อง
     visits_today = CustomerVisit.objects.filter(date=today).count()

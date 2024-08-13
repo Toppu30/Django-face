@@ -1,33 +1,173 @@
+{% load static %}
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Add Member</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add member</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
-        #camera {
-            width: 100%;
-            max-width: 400px;
+        .main {
+            display: flex;
         }
-        #photo {
-            display: none;
+        form {
+            display: flex;
+            
+        }
+        input ,textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #706EFB;
+            border-radius: 15px;
+            background-color: #fff;
+            color: #19181c;
+        }
+        label {
+            display: block;
+            text-align: left;
+            margin-top: 10px;
+            margin-bottom: 10px;
+            font-size: 1em;
+        }
+        .left-panel {
+            flex: 1;
+            padding: 30px;
+        }
+        .right-panel {
+            flex: 1;
+            padding: 30px;
+            align-items: center;
+        }
+        .video-container {
+            position: relative;
+        }
+        .video-container video {
+            max-width: 750px;
+            background: linear-gradient(#19181c, #19181c) padding-box, linear-gradient(180deg, #706EFB, #f93f64) border-box;
+            border-radius: 2.5vh;
+            border: 2px solid transparent;
+        }
+        .video-container canvas {
+            max-width: 300px;
+            width: 100%;
+            
+        }
+        .result {
+            width: 100%;
+            min-height: 70vh;
+            padding: 40px;
+            background: linear-gradient(#19181c, #19181c) padding-box, linear-gradient(180deg, #706EFB, #f93f64) border-box;
+            border-radius: 2.5vh;
+            border: 1.5px solid transparent;
+        }
+        .result .title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-size: 24px;
+        }
+        .result div {
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+        .result img {
+            max-width: 500px;
+            margin-top: 10px;
+        }
+        .button-g button,.button-g a {
+            margin: 20px;
+            padding: 12.5px;
+            background: linear-gradient(180deg, #F93F64,#706EFB);
+            border: 2px solid #fff;
+            border-radius: 2.5vh;
+            color: #fff;
+            font-size: 1em;
+            cursor: pointer;
+        }
+        .button-g {
+            padding: 1vh;
+            display: flex;
         }
     </style>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
-    <h2>Add Member</h2>
-    <form method="post" enctype="multipart/form-data" id="member-form">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <div>
-            <video id="camera" autoplay></video>
-            <canvas id="photo"></canvas>
+    <!-- container start -->
+    <div class="container">
+        <!-- sidebar start -->
+        <div class="sidebar">
+            <div class="logo">
+                <a href="/">
+                    <img src="{% static 'images/logo.png'%}" alt="">
+                </a>
+            </div>
+            <!-- Profile User -->
+            <div class="profile">
+                <div class="photo_profile">
+                    {% if user.photo_profile %}
+                        <img src="{{ user.photo_profile.url }}" alt="">
+                    {% endif %}
+                </div>
+                <div>
+                    <p>{{ user.first_name }}</p>
+                    <p>{{ user.get_role_display }}</p>
+                </div>
+            </div>
+            <div class="sidebar-menu">
+                <a href="{% url 'scan_face' %}">
+                    <i class="fa-solid fa-expand"></i>
+                    สแกนหน้า
+                </a>
+                <a href="{% url 'member_list' %}"><i class="fa-regular fa-user"></i>รายชื่อสมาชิก</a>
+                <a href="{% url 'register' %}"><i class="fa-solid fa-registered"></i>สมัครแคชเชียร์</a>
+                <a href="{% url 'user_list' %}"><i class="fa-regular fa-user"></i>รายชื่อแคชเชียร์</a>
+                <a href="{% url 'dashboard' %}">
+                    <i class="fa-solid fa-chart-line"></i>
+                    รายงานยอดลูกค้า
+                </a>
+                <form method="post" action="{% url 'logout' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="logout-button">
+                        <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                        ออกจากระบบ</button>
+                </form>
+            </div>            
         </div>
-        <button type="button" onclick="takePicture()">Take Picture</button>
-        <input type="hidden" name="photo_data" id="photo_data">
-        <button type="submit" id="submit-btn" style="display:none;">Submit</button>  <!-- ซ่อนปุ่ม Submit -->
-    </form>
+        <!-- sidebar end -->
+        <div class="content">
+            <!-- nav start -->
+            <nav>
+            </nav>
+            <!-- nav end -->
+            <!-- footer start -->
+            <footer><h6>alpha tracking(c)</h6>
+            </footer>
 
-    <p id="message" style="color: red;"></p>
+            <div class="main">
+                <form method="post" enctype="multipart/form-data" id="member-form" >
+                    {% csrf_token %}
+                    <div class="left-panel">
+                        <div id="result" class="result">
+                            <h2>เพิ่มสมาชิก</h2>
+                            {{ form.as_p }}
+                            <div class="button-g">
+                                <button type="button" onclick="takePicture()"><i class="fa-solid fa-camera"></i>ถ่ายรูป</button>
+                                <input type="hidden" name="photo_data" id="photo_data">
+                                <button type="submit" id="submit-btn" style="display:none;"><i class="fa-solid fa-check"></i>ยืนยัน</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="right-panel">
+                        <div class="video-container">
+                            <video id="camera" autoplay></video>
+                            <canvas id="photo"></canvas>
+                        </div>
+                        <p id="message" style="font-size: 18px;"></p>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 
     <script>
         const video = document.getElementById('camera');
