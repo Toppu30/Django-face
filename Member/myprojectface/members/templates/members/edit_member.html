@@ -25,6 +25,9 @@
         #cancel-photo {
             display: none; /* ซ่อนปุ่มยกเลิกการถ่ายตั้งแต่แรก */
         }
+        ul , span ,.helptext{
+            display: none;
+        }
         input ,textarea {
             width: 100%;
             padding: 10px;
@@ -167,7 +170,7 @@
                                 <button type="button" id="retake-photo" onclick="retakePicture()">ถ่ายใหม่</button>  <!-- ปุ่มสำหรับเปิดกล้อง -->
                                 <button type="button" id="cancel-photo" onclick="cancelRetake()">ยกเลิกการถ่าย</button>  <!-- ปุ่มยกเลิกการถ่าย -->
                                 <input type="hidden" name="photo_data" id="photo_data">
-                                <button type="submit" id="submit-btn">Submit</button>  <!-- ปุ่ม Submit แสดงตั้งแต่แรก -->
+                                <button type="submit" id="submit-btn">ยืนยันการแก้ไข</button>  <!-- ปุ่ม Submit แสดงตั้งแต่แรก -->
                             </div>
                         </div>
                     </div>

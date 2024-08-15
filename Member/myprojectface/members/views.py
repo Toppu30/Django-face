@@ -33,7 +33,7 @@ def register(request):
 
 @login_required
 def home(request):
-    return render(request, 'members/scan_face.html', {'user': request.user})
+    return render(request, 'members/scan_face.html', {'user': request.user,})
 
 class CustomLoginView(auth_views.LoginView):
     template_name = 'members/login.html'
@@ -90,7 +90,7 @@ def add_member(request):
                     elif len(face_encodings) == 1:  # ตรวจสอบว่ามีใบหน้าเพียงหนึ่งใบหน้าหรือไม่
                         member.face_encoding = np.array2string(face_encodings[0])  # เก็บ face encoding เป็นสตริง
                         member.save()  # บันทึกสมาชิกลงฐานข้อมูล
-                        return redirect('member_list')  # ย้ายไปหน้ารายการสมาชิก
+                        return redirect('scan_face')  # ย้ายไปหน้ารายการสมาชิก
                     else:  # ไม่พบใบหน้าในภาพ
                         error = 'ไม่พบใบหน้าในภาพ กรุณาอัปโหลดภาพที่มีใบหน้า'
     
@@ -127,7 +127,7 @@ def member_list(request):
 @login_required
 def edit_member(request, member_id):
     member = get_object_or_404(Member, id=member_id)
-    old_image_path = member.face_image.path if member.face_image else None  # เก็บ path ของรูปภาพเก่า
+    old_image_path = member.face_image.path if member.face_image else None
     error = None
 
     if request.method == 'POST':
@@ -137,9 +137,6 @@ def edit_member(request, member_id):
             photo_data = form.cleaned_data.get('photo_data')
 
             if photo_data:
-                # ลบไฟล์รูปภาพเก่าถ้ามีการอัปโหลดรูปภาพใหม่
-                if old_image_path and os.path.exists(old_image_path):
-                    os.remove(old_image_path)
 
                 format, imgstr = photo_data.split(';base64,')
                 ext = format.split('/')[-1]
@@ -214,12 +211,11 @@ def delete_member(request, member_id):
 @login_required
 @user_passes_test(is_manager)
 def dashboard(request):
-    today = timezone.localtime().date()  # ใช้ localtime เพื่อให้แน่ใจว่าใช้ Timezone ที่ถูกต้อง
+    today = timezone.localtime().date()
     visits_today = CustomerVisit.objects.filter(date=today).count()
     member_visits_today = CustomerVisit.objects.filter(date=today, is_member=True).count()
     non_member_visits_today = CustomerVisit.objects.filter(date=today, is_member=False).count()
 
-    # เตรียมข้อมูลสำหรับ 7 วันที่ผ่านมา
     labels = []
     member_data = []
     non_member_data = []
@@ -234,7 +230,7 @@ def dashboard(request):
         'visits_today': visits_today,
         'member_visits_today': member_visits_today,
         'non_member_visits_today': non_member_visits_today,
-        'labels': labels[::-1],  # สลับลำดับเพื่อให้วันล่าสุดอยู่ก่อน
+        'labels': labels[::-1],
         'member_data': member_data[::-1],
         'non_member_data': non_member_data[::-1],
     }
